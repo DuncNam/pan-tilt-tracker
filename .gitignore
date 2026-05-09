@@ -1,3 +1,6 @@
 tracker
 test
 *.o
+.DS_Store
+.vscode/
+.ipynb_checkpoints/
