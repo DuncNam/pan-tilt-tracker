@@ -9,11 +9,13 @@ A real-time computer vision tracking system that detects a colored object via US
 - **Streaming:** Live annotated feed accessible via browser over WiFi
 
 ## Repository Structure
+```
 pan-tilt-tracker/
 ├── docs/                  # Requirements, architecture, assembly guide
 ├── src/                   # C++ vision code and Arduino sketch
 ├── media/                 # Demo video and assembly photos
 └── calibration/           # HSV tuning values
+```
 
 ## Hardware
 | Component | Part |
