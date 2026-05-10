@@ -32,7 +32,7 @@ pan-tilt-tracker/
 - Arduino IDE + Servo.h
 
 ## Build Status
-🔧 In progress — vision pipeline complete, hardware integration pending
+🔧 In progress — software stack complete, hardware integration pending
 
 ## Documentation
 - [System Requirements](docs/SysReq_PanTiltTracker_v2.docx)
