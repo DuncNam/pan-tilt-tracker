@@ -35,7 +35,7 @@ pan-tilt-tracker/
 🔧 In progress — software stack complete, hardware integration pending
 
 ## Documentation
-- [System Requirements](docs/SysReq_PanTiltTracker_v2.docx)
+- [System Requirements](docs/SysReq_PanTiltTracker_v1_1.docx)
 - [Assembly Guide](docs/assembly.md) *(in progress)*
 
 ## Demo
