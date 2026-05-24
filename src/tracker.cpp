@@ -141,10 +141,10 @@ int main() {
                 // Incremental proportional control
                 // Only move if error exceeds deadband
                 if (abs(errorX) > DEADBAND) {
-                    panAngle += (int)(errorX * GAIN);
+                    panAngle -= (int)(errorX * GAIN);
                 }
                 if (abs(errorY) > DEADBAND) {
-                    tiltAngle += (int)(errorY * GAIN);
+                    tiltAngle -= (int)(errorY * GAIN);
                 }
 
                 // Clamp angles to safe servo range
