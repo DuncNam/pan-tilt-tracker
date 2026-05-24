@@ -72,7 +72,7 @@ void sendServoCommand(int fd, int pan, int tilt) {
 
 int main() {
     // Open serial port to Arduino
-    int serialFd = openSerial("/dev/ttyACMO");
+    int serialFd = openSerial("/dev/ttyACM0");
     // Ensure serial port connection
     if (serialFd < 0) {
         std::cerr << "Warning: Could not open serial port. Running vision only." << std::endl;
@@ -88,16 +88,6 @@ int main() {
         std::cerr << "Error: Could not open camera" << std::endl;
         return -1;
     }
-
-    // Create HSV tuner window with trackbars
-    cv::namedWindow("HSV Tuner");
-    cv::waitKey(1);                                             // Let window open
-    cv::createTrackbar("H Low",  "HSV Tuner", &hLow,  179);
-    cv::createTrackbar("H High", "HSV Tuner", &hHigh, 179);
-    cv::createTrackbar("S Low",  "HSV Tuner", &sLow,  255);
-    cv::createTrackbar("S High", "HSV Tuner", &sHigh, 255);
-    cv::createTrackbar("V Low",  "HSV Tuner", &vLow,  255);
-    cv::createTrackbar("V High", "HSV Tuner", &vHigh, 255);
 
     // Generate matrices for raw feed, HSV, and masked feed
     cv::Mat frame, hsv, mask;
@@ -190,10 +180,7 @@ int main() {
             }
         }
 
-        cv::imshow("Tracker", frame);
-        cv::imshow("Mask", mask);
-
-        if (cv::waitKey(1) == 'q') break;
+        if (cv::waitKey(1) == '0') break;
     }
 
     // Cleanup
