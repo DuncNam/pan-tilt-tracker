@@ -72,7 +72,7 @@ void sendServoCommand(int fd, int pan, int tilt) {
 
 int main() {
     // Open serial port to Arduino
-    int serialFd = openSerial("/dev/ttyUSB0");
+    int serialFd = openSerial("/dev/ttyACMO");
     // Ensure serial port connection
     if (serialFd < 0) {
         std::cerr << "Warning: Could not open serial port. Running vision only." << std::endl;
