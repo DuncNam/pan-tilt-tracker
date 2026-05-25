@@ -144,7 +144,7 @@ int main() {
                     panAngle -= (int)(errorX * GAIN);
                 }
                 if (abs(errorY) > DEADBAND) {
-                    tiltAngle -= (int)(errorY * GAIN);
+                    tiltAngle += (int)(errorY * GAIN);
                 }
 
                 // Clamp angles to safe servo range
