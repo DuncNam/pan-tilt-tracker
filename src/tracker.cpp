@@ -15,10 +15,10 @@ int panAngle  = 90;
 int tiltAngle = 90;
 
 // Proportional gain - adjustment rate (degrees/pixel)
-const float GAIN = 0.02f;
+const float GAIN = 0.001f;
 
 // Deadband — jitter threshold (pixels)
-const int DEADBAND = 5;
+const int DEADBAND = 15;
 
 // Servo safety angle limits
 const int SERVO_MIN = 10;
