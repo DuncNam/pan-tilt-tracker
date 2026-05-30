@@ -11,11 +11,13 @@ int sLow = 120, sHigh = 255;
 int vLow = 70, vHigh = 255;
 
 // Servo angles — start centered
+float panAngleF  = 90.0f;
+float tiltAngleF = 90.0f;
 int panAngle  = 90;
 int tiltAngle = 90;
 
 // Proportional gain - adjustment rate (degrees/pixel)
-const float GAIN = 0.001f;
+const float GAIN = 0.005f;
 
 // Deadband — jitter threshold (pixels)
 const int DEADBAND = 15;
@@ -141,15 +143,17 @@ int main() {
                 // Incremental proportional control
                 // Only move if error exceeds deadband
                 if (abs(errorX) > DEADBAND) {
-                    panAngle -= (int)(errorX * GAIN);
+                    panAngleF -= errorX * GAIN;
                 }
                 if (abs(errorY) > DEADBAND) {
-                    tiltAngle += (int)(errorY * GAIN);
+                     tiltAngleF += errorY * GAIN;
                 }
 
-                // Clamp angles to safe servo range
-                panAngle  = std::max(SERVO_MIN, std::min(SERVO_MAX, panAngle));
-                tiltAngle = std::max(SERVO_MIN, std::min(SERVO_MAX, tiltAngle));
+                // Clamp angles to safe servo range and convert to INT for PWM
+                panAngleF  = std::max((float)SERVO_MIN, std::min((float)SERVO_MAX, panAngleF));
+                tiltAngleF = std::max((float)SERVO_MIN, std::min((float)SERVO_MAX, tiltAngleF));
+                panAngle  = (int)panAngleF;
+                tiltAngle = (int)tiltAngleF;
 
                 // Call functiont to send angles to Arduino
                 sendServoCommand(serialFd, panAngle, tiltAngle);
