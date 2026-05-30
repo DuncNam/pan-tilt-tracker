@@ -15,7 +15,7 @@ int panAngle  = 90;
 int tiltAngle = 90;
 
 // Proportional gain - adjustment rate (degrees/pixel)
-const float GAIN = 0.05f;
+const float GAIN = 0.02f;
 
 // Deadband — jitter threshold (pixels)
 const int DEADBAND = 5;
@@ -141,10 +141,10 @@ int main() {
                 // Incremental proportional control
                 // Only move if error exceeds deadband
                 if (abs(errorX) > DEADBAND) {
-                    panAngle -= (int)(errorX * GAIN);
+                    panAngle += (int)(errorX * GAIN);
                 }
                 if (abs(errorY) > DEADBAND) {
-                    tiltAngle += (int)(errorY * GAIN);
+                    tiltAngle -= (int)(errorY * GAIN);
                 }
 
                 // Clamp angles to safe servo range
