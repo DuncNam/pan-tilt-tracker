@@ -15,6 +15,8 @@ float panAngleF  = 90.0f;
 float tiltAngleF = 90.0f;
 int panAngle  = 90;
 int tiltAngle = 90;
+int lastPanSent  = -1;   // last pan value sent to Arduino (-1 = nothing sent yet)
+int lastTiltSent = -1;   // last tilt value sent to Arduino
 
 // Proportional gain - adjustment rate (degrees/pixel)
 const float GAIN = 0.005f;
@@ -155,8 +157,12 @@ int main() {
                 panAngle  = (int)panAngleF;
                 tiltAngle = (int)tiltAngleF;
 
-                // Call functiont to send angles to Arduino
-                sendServoCommand(serialFd, panAngle, tiltAngle);
+                // Throttle serial commands and call functiont to send angles to Arduino
+                if (panAngle != lastPanSent || tiltAngle != lastTiltSent) {
+                    sendServoCommand(serialFd, panAngle, tiltAngle);
+                    lastPanSent  = panAngle;
+                    lastTiltSent = tiltAngle;
+                }
 
                 // Draw centroid marker
                 cv::circle(frame, cv::Point(cx, cy), 10, cv::Scalar(0, 255, 0), -1);
