@@ -6,9 +6,9 @@
 #include <unistd.h>
 
 // Global HSV trackbar values
-int hLow = 0, hHigh = 10;
-int sLow = 120, sHigh = 255;
-int vLow = 70, vHigh = 255;
+int hLow = 45, hHigh = 85;
+int sLow = 80, sHigh = 255;
+int vLow = 60, vHigh = 255;
 
 // Servo angles — start centered
 float panAngleF  = 90.0f;
