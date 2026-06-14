@@ -7,8 +7,8 @@
 
 // Global HSV trackbar values
 int hLow = 45, hHigh = 85;
-int sLow = 80, sHigh = 255;
-int vLow = 60, vHigh = 255;
+int sLow = 50, sHigh = 255;
+int vLow = 30, vHigh = 255;
 
 // Servo angles — start centered
 float panAngleF  = 90.0f;
