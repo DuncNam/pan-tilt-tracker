@@ -15,11 +15,16 @@ float panAngleF  = 90.0f;
 float tiltAngleF = 90.0f;
 int panAngle  = 90;
 int tiltAngle = 90;
-int lastPanSent  = -1;   // last pan value sent to Arduino (-1 = nothing sent yet)
+int lastPanSent  = -1;   // last pan value sent to Arduino
 int lastTiltSent = -1;   // last tilt value sent to Arduino
 
+// Implausible position rejection
+int lastCx = -1;   // last valid centroid X
+int lastCy = -1;   // last valid centroid Y
+const int MAX_JUMP = 150;  // reject centroid jumps larger than this many pixels
+
 // Proportional gain - adjustment rate (degrees/pixel)
-const float GAIN = 0.005f;
+const float GAIN = 0.01f;
 
 // Deadband — jitter threshold (pixels)
 const int DEADBAND = 15;
@@ -131,13 +136,27 @@ int main() {
                     largest = i;
             }
 
-            // Threshold for minimum trackable blob size is 500 pixels
-            if (cv::contourArea(contours[largest]) > 500) {
+            // Threshold for minimum trackable blob size is 1000 pixels
+            if (cv::contourArea(contours[largest]) > 1000) {
                 // Compute centroid
                 cv::Moments m = cv::moments(contours[largest]); // Compute moments
                 // m.m00 is zeroth moment (area of blob)
                 int cx = (int)(m.m10 / m.m00);      // m.m10 first moment X (intensity weighted X width)
                 int cy = (int)(m.m01 / m.m00);      // m.m01 first moment Y (intensity weighted Y width)
+
+                // Reject implausible jumps — if the centroid teleports too far from last frame
+                if (lastCx >= 0) {
+                    int jumpX = abs(cx - lastCx);
+                    int jumpY = abs(cy - lastCy);
+                    if (jumpX > MAX_JUMP || jumpY > MAX_JUMP) {
+                        if (cv::waitKey(30) >= 0) break;
+                        continue;  // skip this frame, don't move servos
+                    }
+                }
+
+                // Accept this centroid as valid
+                lastCx = cx;
+                lastCy = cy;
 
                 // Calculate error from frame center
                 int frameW = frame.cols;
@@ -193,7 +212,7 @@ int main() {
             }
         }
 
-        if (cv::waitKey(30) == '0') break;
+        if (cv::waitKey(30) >= '0') break;
     }
 
     // Cleanup
