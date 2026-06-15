@@ -72,6 +72,9 @@ void sendServoCommand(int fd, int pan, int tilt) {
 
     // Send to Arduino through serial port
     write(fd, cmd.c_str(), cmd.length());
+
+    // Wait until all data is physically transmitted before continuing
+    tcdrain(fd); 
 }
 
 int main() {
@@ -190,7 +193,7 @@ int main() {
             }
         }
 
-        if (cv::waitKey(1) == '0') break;
+        if (cv::waitKey(30) == '0') break;
     }
 
     // Cleanup
