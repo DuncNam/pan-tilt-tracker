@@ -28,20 +28,31 @@ void setup() {
 
     // Start serial communication at 9600 baud (bit/s)
     Serial.begin(9600);
-    Serial.println("Arduino ready");
 }
 
 void loop() {
-    // Check if data is available from RPi
-    if (Serial.available() > 0) {
-        // Read incoming string until newline
-        String incoming = Serial.readStringUntil('\n');
+    static String latest = ""; // Command string
+    bool gotCommand = false; // Verifies receipt of a complete command
 
-        // Parse pan and tilt angles from "pan,tilt" format
-        int commaIndex = incoming.indexOf(',');
-        if (commaIndex > 0) {
-            int newPan  = incoming.substring(0, commaIndex).toInt();
-            int newTilt = incoming.substring(commaIndex + 1).toInt();
+    // Serial drain loop
+    while (Serial.available() > 0) {
+        char c = Serial.read(); // Read next character
+        if (c == '\n') {
+            // End of a command — mark it ready to process
+            gotCommand = true;
+            break;
+        } else {
+            latest += c;
+        }
+    }   
+
+    if (gotCommand) {
+        // Parse "pan,tilt" from the assembled string
+        int commaIndex = latest.indexOf(',');
+        if (commaIndex > 0) { // Verify commma was found
+            // Extract angles from string to integer
+            int newPan  = latest.substring(0, commaIndex).toInt();
+            int newTilt = latest.substring(commaIndex + 1).toInt();
 
             // Constrain angles to safe servo range
             panAngle  = constrain(newPan,  0, 180);
@@ -50,12 +61,8 @@ void loop() {
             // Command servos
             panServo.write(panAngle);
             tiltServo.write(tiltAngle);
-
-            // Echo back confirmation
-            Serial.print("Pan: ");
-            Serial.print(panAngle);
-            Serial.print(" Tilt: ");
-            Serial.println(tiltAngle);
         }
+        // Reset for the next command
+        latest = "";
     }
 }
