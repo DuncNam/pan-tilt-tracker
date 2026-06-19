@@ -129,8 +129,8 @@ int main() {
 
         // Create and clean mask
         cv::inRange(hsv, lowerBound, upperBound, mask);
-        cv::erode(mask, mask, cv::Mat(), cv::Point(-1,-1), 2);      // Erode twice to remove noise
-        cv::dilate(mask, mask, cv::Mat(), cv::Point(-1,-1), 2);     // Dilate twice to restore blob sizes
+        cv::erode(mask, mask, cv::Mat(), cv::Point(-1,-1), 1);      // Erode to remove noise
+        cv::dilate(mask, mask, cv::Mat(), cv::Point(-1,-1), 1);     // Dilate to restore blob sizes
 
         // Create array contours and store blob outlines
         std::vector<std::vector<cv::Point>> contours;
