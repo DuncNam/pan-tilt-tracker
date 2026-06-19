@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
+#include <chrono>
 
 // Global HSV trackbar values
 int hLow = 45, hHigh = 85;
@@ -18,13 +19,18 @@ int tiltAngle = 90;
 int lastPanSent  = -1;   // last pan value sent to Arduino
 int lastTiltSent = -1;   // last tilt value sent to Arduino
 
+// Rate limiting for serial sends
+auto lastSendTime = std::chrono::steady_clock::now();
+const int MIN_SEND_INTERVAL_MS = 50;  // minimum ms between serial commands
+
 // Implausible position rejection
 int lastCx = -1;   // last valid centroid X
 int lastCy = -1;   // last valid centroid Y
 const int MAX_JUMP = 150;  // reject centroid jumps larger than this many pixels
 
-// Proportional gain - adjustment rate (degrees/pixel)
-const float GAIN = 0.01f;
+// Gain - adjustment rate (degrees/pixel)
+const float GAIN = 0.01f; // Proportional gain
+const float KD = 0.005f;  // Derivative gain
 
 // Deadband — jitter threshold (pixels)
 const int DEADBAND = 15;
@@ -98,6 +104,12 @@ int main() {
         return -1;
     }
 
+    // Set camera resolution
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
+    std::cout << "Capture: " << cap.get(cv::CAP_PROP_FRAME_WIDTH)
+     << "x" << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << std::endl; // Verify resolution
+    
     // Generate matrices for raw feed, HSV, and masked feed
     cv::Mat frame, hsv, mask;
 
@@ -132,6 +144,9 @@ int main() {
                 if (cv::contourArea(contours[i]) > cv::contourArea(contours[largest]))
                     largest = i;
             }
+
+            double area = cv::contourArea(contours[largest]);
+            std::cout << "Largest blob area: " << area << std::endl;  // TEMP
 
             // Threshold for minimum trackable blob size is 1000 pixels
             if (cv::contourArea(contours[largest]) > 1000) {
@@ -177,10 +192,13 @@ int main() {
                 tiltAngle = (int)tiltAngleF;
 
                 // Throttle serial commands and call functiont to send angles to Arduino
-                if (panAngle != lastPanSent || tiltAngle != lastTiltSent) {
+                auto now = std::chrono::steady_clock::now();
+                auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count();
+                if ((panAngle != lastPanSent || tiltAngle != lastTiltSent) && elapsed >= MIN_SEND_INTERVAL_MS) {
                     sendServoCommand(serialFd, panAngle, tiltAngle);
                     lastPanSent  = panAngle;
                     lastTiltSent = tiltAngle;
+                    lastSendTime = now;
                 }
 
                 // Draw centroid marker
