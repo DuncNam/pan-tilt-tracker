@@ -5,6 +5,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <chrono>
+#include <thread>
 
 // Global HSV trackbar values
 int hLow = 45, hHigh = 85;
@@ -165,7 +166,7 @@ int main() {
                     int jumpX = abs(cx - lastCx);
                     int jumpY = abs(cy - lastCy);
                     if (jumpX > MAX_JUMP || jumpY > MAX_JUMP) {
-                        if (cv::waitKey(30) >= 0) break;
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
                         continue;  // skip this frame, don't move servos
                     }
                 }
@@ -241,7 +242,7 @@ int main() {
             fpsClock = fpsNow;
         }
 
-        if (cv::waitKey(30) >= 0) break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     // Cleanup
