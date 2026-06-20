@@ -16,20 +16,20 @@ float panAngleF  = 90.0f;
 float tiltAngleF = 90.0f;
 int panAngle  = 90;
 int tiltAngle = 90;
-int lastPanSent  = -1;   // last pan value sent to Arduino
-int lastTiltSent = -1;   // last tilt value sent to Arduino
+int lastPanSent  = -1;          // last pan value sent to Arduino
+int lastTiltSent = -1;          // last tilt value sent to Arduino
 
-// Rate limiting for serial sends
+// Serial throttle to avoid overload
 auto lastSendTime = std::chrono::steady_clock::now();
-const int MIN_SEND_INTERVAL_MS = 10;  // minimum ms between serial commands
+const int MIN_SEND_INTERVAL_MS = 10;    // minimum ms between serial commands
 
 // Implausible position rejection
-int lastCx = -1;   // last valid centroid X
-int lastCy = -1;   // last valid centroid Y
-const int MAX_JUMP = 150;  // reject centroid jumps larger than this many pixels
+int lastCx = -1;                 // last valid centroid X
+int lastCy = -1;                 // last valid centroid Y
+const int MAX_JUMP = 150;        // reject centroid jumps larger than this many pixels
 
 // Gain - adjustment rate (degrees/pixel)
-const float GAIN = 0.01f; // Proportional gain
+const float GAIN = 0.01f;        // Proportional
 
 // Deadband — jitter threshold (pixels)
 const int DEADBAND = 15;
@@ -38,9 +38,9 @@ const int DEADBAND = 15;
 const int SERVO_MIN = 10;
 const int SERVO_MAX = 170;
 
-// Open serial port to Arduino
+// Open and configure serial port to Arduino
 int openSerial(const char* port) {
-    // Open for reading & writing, not the controlling terminal, non-blocking writes
+    // Open for reading & writing, not controlling, non-blocking writes
     int fd = open(port, O_RDWR | O_NOCTTY | O_NDELAY);
 
     // If serial port open fails
@@ -49,13 +49,11 @@ int openSerial(const char* port) {
         return -1;
     }
 
-    // Initialize data structure for port attributes
-    struct termios tty;
-    tcgetattr(fd, &tty);    // Read open settings
+    struct termios tty;             // Initialize tty for port attributes
+    tcgetattr(fd, &tty);            // Read open settings
 
-    // Set baud rate to 115200 — must match Arduino
-    cfsetospeed(&tty, B115200);
-    cfsetispeed(&tty, B115200);
+    cfsetospeed(&tty, B115200);     // Set baud rate out to 115200
+    cfsetispeed(&tty, B115200);     // Set baud rate in to 115200
 
     // 8N1 — 8 data bits, no parity, 1 stop bit
     tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;
@@ -74,60 +72,56 @@ int openSerial(const char* port) {
 
 // Send pan and tilt angles to Arduino over serial
 void sendServoCommand(int fd, int pan, int tilt) {
-    // Ensure serial port connection
-    if (fd < 0) return;
+    if (fd < 0) return;                      // Ensure serial port connection
 
-    // Convert ints to string command
+    // Convert ints to string
     std::string cmd = std::to_string(pan) + "," + std::to_string(tilt) + "\n";
 
-    // Send to Arduino through serial port
-    write(fd, cmd.c_str(), cmd.length());
+    write(fd, cmd.c_str(), cmd.length());    // Send to Arduino through serial port
 }
 
 int main() {
-    // Open serial port to Arduino
-    int serialFd = openSerial("/dev/ttyACM0");
+    int serialFd = openSerial("/dev/ttyACM0");  // Open serial port to Arduino
+
     // Ensure serial port connection
     if (serialFd < 0) {
         std::cerr << "Warning: Could not open serial port. Running vision only." << std::endl;
     }
 
-    // Small delay to let Arduino initialize after serial connection
-    sleep(2);
+    sleep(2);                                   // Small delay to let Arduino initialize after serial connection
 
-    // Open camera
-    cv::VideoCapture cap(0, cv::CAP_V4L2);
+    cv::VideoCapture cap(0, cv::CAP_V4L2);      // Open camera
+
     // Ensure camera connection
     if (!cap.isOpened()) {
         std::cerr << "Error: Could not open camera" << std::endl;
         return -1;
     }
 
-    // Request MJPEG — YUYV at 720p is bandwidth-capped to 5fps; MJPEG does 30fps
+    // Request MJPEG (30fps) instead of YUYV (5fps) at 720p
     cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M','J','P','G'));
 
     // Set camera resolution
     cap.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
+
+    // Verify resolution
     std::cout << "Capture: " << cap.get(cv::CAP_PROP_FRAME_WIDTH)
-     << "x" << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << std::endl; // Verify resolution
+        << "x" << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << std::endl;
     
     // Generate matrices for raw feed, HSV, and masked feed
     cv::Mat frame, hsv, mask;
 
-    // Frame rate 
+    // Frame rate counter
     int frameCount = 0;
     auto fpsClock = std::chrono::steady_clock::now();
 
     // Initialize program loop
     while (true) {
-        // Send current frame to frame matric
-        cap >> frame;
-        // Verify camera feed
-        if (frame.empty()) break;
+        cap >> frame;                                               // Send current frame to frame matrix
+        if (frame.empty()) break;                                   // Verify camera feed
 
-        // Convert BGR to HSV
-        cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
+        cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);                // Convert BGR to HSV
 
         // Build color bounds from trackbar values
         cv::Scalar lowerBound(hLow, sLow, vLow);
@@ -145,46 +139,47 @@ int main() {
         // Ensure there is a blob in  mask
         if (!contours.empty()) {
 
-            // Find largest blob
+            // Find largest blob in contours
             int largest = 0;
             double area = cv::contourArea(contours[largest]);
             for (int i = 1; i < (int)contours.size(); i++) {
                 double a = cv::contourArea(contours[i]);
                 if (a > area) {
                     largest = i;
-                    area = a;          // <-- keep area in sync with largest
+                    area = a;
                 }
             }
 
             // Threshold for minimum trackable blob size is 500 pixels
             if (area > 500) {
                 // Compute centroid
-                cv::Moments m = cv::moments(contours[largest]); // Compute moments
+                cv::Moments m = cv::moments(contours[largest]);     // Compute moments
+
                 // m.m00 is zeroth moment (area of blob)
-                int cx = (int)(m.m10 / m.m00);      // m.m10 first moment X (intensity weighted X width)
-                int cy = (int)(m.m01 / m.m00);      // m.m01 first moment Y (intensity weighted Y width)
+                int cx = (int)(m.m10 / m.m00);                      // m.m10 first moment X (intensity weighted X width)
+                int cy = (int)(m.m01 / m.m00);                      // m.m01 first moment Y (intensity weighted Y width)
 
                 // Reject implausible jumps — if the centroid teleports too far from last frame
-                if (lastCx >= 0) {
+                if (lastCx >= 0) {                                  // Skips check on first detection
                     int jumpX = abs(cx - lastCx);
                     int jumpY = abs(cy - lastCy);
                     if (jumpX > MAX_JUMP || jumpY > MAX_JUMP) {
-                        continue;
+                        continue;                                   // Discard this frame without moving servos
                     }
                 }
 
-                // Accept this centroid as valid
+                // Accept this centroid as valid for next jump check
                 lastCx = cx;
                 lastCy = cy;
 
                 // Calculate error from frame center
-                int frameW = frame.cols;
-                int frameH = frame.rows;
-                int errorX = cx - frameW / 2;
-                int errorY = cy - frameH / 2;
+                int frameW = frame.cols;        // (1280)
+                int frameH = frame.rows;        // (720)
+                int errorX = cx - frameW / 2;   // pos (+) -> target right of center
+                int errorY = cy - frameH / 2;   // pos (+) -> target below center
 
-                // Incremental proportional control
-                // Only move if error exceeds deadband
+                // Integral corrector
+                // Only update outside of deadband
                 if (abs(errorX) > DEADBAND) {
                     panAngleF -= errorX * GAIN;
                 }
@@ -198,7 +193,7 @@ int main() {
                 panAngle  = (int)panAngleF;
                 tiltAngle = (int)tiltAngleF;
 
-                // Throttle serial commands and call functiont to send angles to Arduino
+                // Send if angle changed and time has passed
                 auto now = std::chrono::steady_clock::now();
                 auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count();
                 if ((panAngle != lastPanSent || tiltAngle != lastTiltSent) && elapsed >= MIN_SEND_INTERVAL_MS) {
@@ -224,6 +219,5 @@ int main() {
     // Cleanup
     if (serialFd >= 0) close(serialFd);
     cap.release();
-    cv::destroyAllWindows();
     return 0;
 }
