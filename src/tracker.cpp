@@ -105,6 +105,9 @@ int main() {
         return -1;
     }
 
+    // Request MJPEG — YUYV at 720p is bandwidth-capped to 5fps; MJPEG does 30fps
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M','J','P','G'));
+
     // Set camera resolution
     cap.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
