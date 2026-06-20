@@ -97,7 +97,7 @@ int main() {
     sleep(2);
 
     // Open camera
-    cv::VideoCapture cap(0);
+    cv::VideoCapture cap(0, cv::CAP_V4L2);
     // Ensure camera connection
     if (!cap.isOpened()) {
         std::cerr << "Error: Could not open camera" << std::endl;
