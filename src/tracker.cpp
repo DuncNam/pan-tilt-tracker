@@ -1,18 +1,17 @@
-#include <opencv2/opencv.hpp>
-#include <iostream>
-#include <string>
-#include <fcntl.h>
-#include <termios.h>
-#include <unistd.h>
-#include <chrono>
-#include <thread>
+#include <opencv2/opencv.hpp>   // Include OpenCV for image processing
+#include <iostream>             // Terminal ouput/debugging
+#include <string>               // String for serial commands
+#include <fcntl.h>              // Open serial port
+#include <termios.h>            // Serial port configuration
+#include <unistd.h>             // Serial port writing, sleeping, and closing
+#include <chrono>               // Clock for serial throttle
 
-// Global HSV trackbar values
+// HSV tuned values for green ping pong ball target
 int hLow = 45, hHigh = 85;
 int sLow = 50, sHigh = 255;
 int vLow = 30, vHigh = 255;
 
-// Servo angles — start centered
+// Servo angles float, int, and previous. Servos begin at 90º
 float panAngleF  = 90.0f;
 float tiltAngleF = 90.0f;
 int panAngle  = 90;
@@ -22,7 +21,7 @@ int lastTiltSent = -1;   // last tilt value sent to Arduino
 
 // Rate limiting for serial sends
 auto lastSendTime = std::chrono::steady_clock::now();
-const int MIN_SEND_INTERVAL_MS = 50;  // minimum ms between serial commands
+const int MIN_SEND_INTERVAL_MS = 10;  // minimum ms between serial commands
 
 // Implausible position rejection
 int lastCx = -1;   // last valid centroid X
@@ -31,7 +30,6 @@ const int MAX_JUMP = 150;  // reject centroid jumps larger than this many pixels
 
 // Gain - adjustment rate (degrees/pixel)
 const float GAIN = 0.01f; // Proportional gain
-const float KD = 0.005f;  // Derivative gain
 
 // Deadband — jitter threshold (pixels)
 const int DEADBAND = 15;
@@ -55,9 +53,9 @@ int openSerial(const char* port) {
     struct termios tty;
     tcgetattr(fd, &tty);    // Read open settings
 
-    // Set baud rate to 9600 — must match Arduino
-    cfsetospeed(&tty, B9600);
-    cfsetispeed(&tty, B9600);
+    // Set baud rate to 115200 — must match Arduino
+    cfsetospeed(&tty, B115200);
+    cfsetispeed(&tty, B115200);
 
     // 8N1 — 8 data bits, no parity, 1 stop bit
     tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;
@@ -146,18 +144,20 @@ int main() {
 
         // Ensure there is a blob in  mask
         if (!contours.empty()) {
+
             // Find largest blob
             int largest = 0;
+            double area = cv::contourArea(contours[largest]);
             for (int i = 1; i < (int)contours.size(); i++) {
-                if (cv::contourArea(contours[i]) > cv::contourArea(contours[largest]))
+                double a = cv::contourArea(contours[i]);
+                if (a > area) {
                     largest = i;
+                    area = a;          // <-- keep area in sync with largest
+                }
             }
 
-            double area = cv::contourArea(contours[largest]);
-            std::cout << "Largest blob area: " << area << std::endl;  // TEMP
-
             // Threshold for minimum trackable blob size is 500 pixels
-            if (cv::contourArea(contours[largest]) > 500) {
+            if (area > 500) {
                 // Compute centroid
                 cv::Moments m = cv::moments(contours[largest]); // Compute moments
                 // m.m00 is zeroth moment (area of blob)
@@ -169,8 +169,7 @@ int main() {
                     int jumpX = abs(cx - lastCx);
                     int jumpY = abs(cy - lastCy);
                     if (jumpX > MAX_JUMP || jumpY > MAX_JUMP) {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                        continue;  // skip this frame, don't move servos
+                        continue;
                     }
                 }
 
@@ -208,30 +207,6 @@ int main() {
                     lastTiltSent = tiltAngle;
                     lastSendTime = now;
                 }
-
-                // Draw centroid marker
-                cv::circle(frame, cv::Point(cx, cy), 10, cv::Scalar(0, 255, 0), -1);
-                cv::line(frame, cv::Point(cx-20, cy), cv::Point(cx+20, cy), cv::Scalar(0,255,0), 2);
-                cv::line(frame, cv::Point(cx, cy-20), cv::Point(cx, cy+20), cv::Scalar(0,255,0), 2);
-
-                // Draw frame center crosshair
-                cv::drawMarker(frame, cv::Point(frameW/2, frameH/2),
-                    cv::Scalar(0,0,255), cv::MARKER_CROSS, 20, 2);
-
-                // Display error and servo angles on screen
-                cv::putText(frame, "Error X: " + std::to_string(errorX),
-                    cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0,255,0), 2);
-                cv::putText(frame, "Error Y: " + std::to_string(errorY),
-                    cv::Point(10, 60), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0,255,0), 2);
-                cv::putText(frame, "Pan: " + std::to_string(panAngle),
-                    cv::Point(10, 90), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0,255,255), 2);
-                cv::putText(frame, "Tilt: " + std::to_string(tiltAngle),
-                    cv::Point(10, 120), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0,255,255), 2);
-
-                // Print to terminal
-                std::cout << "Error: (" << errorX << ", " << errorY << ")"
-                          << "  Pan: " << panAngle
-                          << "  Tilt: " << tiltAngle << std::endl;
             }
         }
 
@@ -244,8 +219,6 @@ int main() {
             frameCount = 0;
             fpsClock = fpsNow;
         }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     // Cleanup
