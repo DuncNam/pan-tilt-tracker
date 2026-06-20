@@ -113,6 +113,10 @@ int main() {
     // Generate matrices for raw feed, HSV, and masked feed
     cv::Mat frame, hsv, mask;
 
+    // Frame rate 
+    int frameCount = 0;
+    auto fpsClock = std::chrono::steady_clock::now();
+
     // Initialize program loop
     while (true) {
         // Send current frame to frame matric
@@ -225,6 +229,16 @@ int main() {
                           << "  Pan: " << panAngle
                           << "  Tilt: " << tiltAngle << std::endl;
             }
+        }
+
+        // Frame rate update and print
+        frameCount++;
+        auto fpsNow = std::chrono::steady_clock::now();
+        auto fpsElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(fpsNow - fpsClock).count();
+        if (fpsElapsed >= 1000) {
+            std::cout << "FPS: " << frameCount << std::endl;
+            frameCount = 0;
+            fpsClock = fpsNow;
         }
 
         if (cv::waitKey(30) >= 0) break;
