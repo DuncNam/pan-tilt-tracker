@@ -148,8 +148,8 @@ int main() {
             double area = cv::contourArea(contours[largest]);
             std::cout << "Largest blob area: " << area << std::endl;  // TEMP
 
-            // Threshold for minimum trackable blob size is 1000 pixels
-            if (cv::contourArea(contours[largest]) > 1000) {
+            // Threshold for minimum trackable blob size is 500 pixels
+            if (cv::contourArea(contours[largest]) > 500) {
                 // Compute centroid
                 cv::Moments m = cv::moments(contours[largest]); // Compute moments
                 // m.m00 is zeroth moment (area of blob)
