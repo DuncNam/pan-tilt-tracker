@@ -40,7 +40,7 @@ const int SERVO_MAX = 170;
 
 // Boresigh adjustment
 const int BORESIGHT_X = 55;   // laser-to-camera offset, horizontal (pixels)
-const int BORESIGHT_Y = 70;   // laser-to-camera offset, vertical (pixels)
+const int BORESIGHT_Y = 80;   // laser-to-camera offset, vertical (pixels)
 
 // Open and configure serial port to Arduino
 int openSerial(const char* port) {
