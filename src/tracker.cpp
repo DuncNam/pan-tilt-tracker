@@ -137,6 +137,7 @@ int main() {
         cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
         // Ensure there is a blob in  mask
+        bool targetFound = false;
         if (!contours.empty()) {
 
             // Find largest blob in contours
@@ -160,49 +161,59 @@ int main() {
                 int cy = (int)(m.m01 / m.m00);                      // m.m01 first moment Y (intensity weighted Y width)
 
                 // Reject implausible jumps — if the centroid teleports too far from last frame
+                bool jumpRejected = false;
                 if (lastCx >= 0) {                                  // Skips check on first detection
                     int jumpX = abs(cx - lastCx);
                     int jumpY = abs(cy - lastCy);
                     if (jumpX > MAX_JUMP || jumpY > MAX_JUMP) {
-                        continue;                                   // Discard this frame without moving servos
+                        jumpRejected = true;                        // Discard this frame without moving servos
                     }
                 }
 
-                // Accept this centroid as valid for next jump check
-                lastCx = cx;
-                lastCy = cy;
+                // Update centroid based on valid target
+                if (!jumpRejected) {
+                    targetFound = true;      // valid target locked this frame
+                    lastCx = cx;
+                    lastCy = cy;
 
-                // Calculate error from frame center
-                int frameW = frame.cols;        // (1280)
-                int frameH = frame.rows;        // (720)
-                int errorX = cx - frameW / 2;   // pos (+) -> target right of center
-                int errorY = cy - frameH / 2;   // pos (+) -> target below center
+                    // Calculate error from frame center
+                    int frameW = frame.cols;        // (1280)
+                    int frameH = frame.rows;        // (720)
+                    int errorX = cx - frameW / 2;   // pos (+) -> target right of center
+                    int errorY = cy - frameH / 2;   // pos (+) -> target below center
 
-                // Integral corrector
-                // Only update outside of deadband
-                if (abs(errorX) > DEADBAND) {
-                    panAngleF -= errorX * GAIN;
-                }
-                if (abs(errorY) > DEADBAND) {
-                     tiltAngleF += errorY * GAIN;
-                }
+                    // Integral corrector
+                    // Only update outside of deadband
+                    if (abs(errorX) > DEADBAND) {
+                        panAngleF -= errorX * GAIN;
+                    }
+                    if (abs(errorY) > DEADBAND) {
+                        tiltAngleF += errorY * GAIN;
+                    }
 
-                // Clamp angles to safe servo range and convert to INT for PWM
-                panAngleF  = std::max((float)SERVO_MIN, std::min((float)SERVO_MAX, panAngleF));
-                tiltAngleF = std::max((float)SERVO_MIN, std::min((float)SERVO_MAX, tiltAngleF));
-                panAngle  = (int)panAngleF;
-                tiltAngle = (int)tiltAngleF;
+                    // Clamp angles to safe servo range and convert to INT for PWM
+                    panAngleF  = std::max((float)SERVO_MIN, std::min((float)SERVO_MAX, panAngleF));
+                    tiltAngleF = std::max((float)SERVO_MIN, std::min((float)SERVO_MAX, tiltAngleF));
+                    panAngle  = (int)panAngleF;
+                    tiltAngle = (int)tiltAngleF;
 
-                // Send if angle changed and time has passed
-                auto now = std::chrono::steady_clock::now();
-                auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count();
-                if ((panAngle != lastPanSent || tiltAngle != lastTiltSent) && elapsed >= MIN_SEND_INTERVAL_MS) {
-                    sendServoCommand(serialFd, panAngle, tiltAngle);
-                    lastPanSent  = panAngle;
-                    lastTiltSent = tiltAngle;
-                    lastSendTime = now;
+                    // Send if angle changed and time has passed
+                    auto now = std::chrono::steady_clock::now();
+                    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count();
+                    if ((panAngle != lastPanSent || tiltAngle != lastTiltSent) && elapsed >= MIN_SEND_INTERVAL_MS) {
+                        sendServoCommand(serialFd, panAngle, tiltAngle);
+                        lastPanSent  = panAngle;
+                        lastTiltSent = tiltAngle;
+                        lastSendTime = now;
+                    }
                 }
             }
+        }
+
+        // If no valid target this frame, invalidate jump history so re-entry is accepted fresh
+        if (!targetFound) {
+            lastCx = -1;
+            lastCy = -1;
         }
 
         // Frame rate update and print
