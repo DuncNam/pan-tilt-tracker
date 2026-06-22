@@ -38,6 +38,10 @@ const int DEADBAND = 15;
 const int SERVO_MIN = 10;
 const int SERVO_MAX = 170;
 
+// Boresigh adjustment
+const int BORESIGHT_X = 10;   // laser-to-camera offset, horizontal (pixels)
+const int BORESIGHT_Y = 10;   // laser-to-camera offset, vertical (pixels)
+
 // Open and configure serial port to Arduino
 int openSerial(const char* port) {
     // Open for reading & writing, not controlling, non-blocking writes
@@ -179,8 +183,8 @@ int main() {
                     // Calculate error from frame center
                     int frameW = frame.cols;        // (1280)
                     int frameH = frame.rows;        // (720)
-                    int errorX = cx - frameW / 2;   // pos (+) -> target right of center
-                    int errorY = cy - frameH / 2;   // pos (+) -> target below center
+                    int errorX = cx - ((frameW / 2) + BORESIGHT_X);   // pos (+) -> target right of center
+                    int errorY = cy - ((frameH / 2) + BORESIGHT_Y);   // pos (+) -> target below center
 
                     // Integral corrector
                     // Only update outside of deadband
