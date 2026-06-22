@@ -183,8 +183,8 @@ int main() {
                     // Calculate error from frame center
                     int frameW = frame.cols;        // (1280)
                     int frameH = frame.rows;        // (720)
-                    int errorX = cx - ((frameW / 2) + BORESIGHT_X);   // pos (+) -> target right of center
-                    int errorY = cy - ((frameH / 2) + BORESIGHT_Y);   // pos (+) -> target below center
+                    int errorX = cx - ((frameW / 2) - BORESIGHT_X);   // pos (+) -> target right of center
+                    int errorY = cy - ((frameH / 2) - BORESIGHT_Y);   // pos (+) -> target below center
 
                     // Integral corrector
                     // Only update outside of deadband
