@@ -37,8 +37,8 @@ const int SERVO_MIN = 10;
 const int SERVO_MAX = 170;
 
 // Servo safety PW limits for command resolution finer than integer angles
-const int US_MIN = 1000;   // pulse width at 0 degrees
-const int US_MAX = 2000;   // pulse width at 180 degrees
+const int US_MIN = 500;   // pulse width at 0 degrees
+const int US_MAX = 2500;   // pulse width at 180 degrees
 
 // Boresigh adjustment
 const int BORESIGHT_X = 50;   // laser-to-camera offset, horizontal (pixels)
