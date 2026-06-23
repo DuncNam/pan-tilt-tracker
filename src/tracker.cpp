@@ -27,7 +27,7 @@ int lastCy = -1;                 // last valid centroid Y
 const int MAX_JUMP = 150;        // reject centroid jumps larger than this many pixels
 
 // Gain - adjustment rate (degrees/pixel)
-const float GAIN = 0.02f;        // Proportional
+const float GAIN = 0.01f;        // Proportional
 
 // Deadband — jitter threshold (pixels)
 const int DEADBAND = 10;
