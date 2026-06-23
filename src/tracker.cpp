@@ -14,8 +14,6 @@ int vLow = 30, vHigh = 255;
 // Servo angles float, int, and previous. Servos begin at 90º
 float panAngleF  = 90.0f;
 float tiltAngleF = 90.0f;
-int panAngle  = 90;
-int tiltAngle = 90;
 int lastPanSent  = -1;          // last pan value sent to Arduino
 int lastTiltSent = -1;          // last tilt value sent to Arduino
 
@@ -37,6 +35,10 @@ const int DEADBAND = 15;
 // Servo safety angle limits
 const int SERVO_MIN = 10;
 const int SERVO_MAX = 170;
+
+// Servo safety PW limits for command resolution finer than integer angles
+const int US_MIN = 1000;   // pulse width at 0 degrees
+const int US_MAX = 2000;   // pulse width at 180 degrees
 
 // Boresigh adjustment
 const int BORESIGHT_X = 55;   // laser-to-camera offset, horizontal (pixels)
@@ -72,6 +74,11 @@ int openSerial(const char* port) {
     // Apply attributes
     tcsetattr(fd, TCSANOW, &tty);
     return fd;
+}
+
+// Convert angle commands to PW
+int angleToMicros(float angle) {
+    return (int)(US_MIN + (angle / 180.0f) * (US_MAX - US_MIN));
 }
 
 // Send pan and tilt angles to Arduino over serial
@@ -195,19 +202,21 @@ int main() {
                         tiltAngleF += errorY * GAIN;
                     }
 
-                    // Clamp angles to safe servo range and convert to INT for PWM
+                    // Clamp angles to safe servo range in degrees
                     panAngleF  = std::max((float)SERVO_MIN, std::min((float)SERVO_MAX, panAngleF));
                     tiltAngleF = std::max((float)SERVO_MIN, std::min((float)SERVO_MAX, tiltAngleF));
-                    panAngle  = (int)panAngleF;
-                    tiltAngle = (int)tiltAngleF;
 
-                    // Send if angle changed and time has passed
+                    // Convert fractional degrees to microseconds for sub-degree resolution
+                    int panMicros  = angleToMicros(panAngleF);
+                    int tiltMicros = angleToMicros(tiltAngleF);
+
+                    // Send if microsecond command changed and enough time has passed
                     auto now = std::chrono::steady_clock::now();
                     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count();
-                    if ((panAngle != lastPanSent || tiltAngle != lastTiltSent) && elapsed >= MIN_SEND_INTERVAL_MS) {
-                        sendServoCommand(serialFd, panAngle, tiltAngle);
-                        lastPanSent  = panAngle;
-                        lastTiltSent = tiltAngle;
+                    if ((panMicros != lastPanSent || tiltMicros != lastTiltSent) && elapsed >= MIN_SEND_INTERVAL_MS) {
+                        sendServoCommand(serialFd, panMicros, tiltMicros);
+                        lastPanSent  = panMicros;
+                        lastTiltSent = tiltMicros;
                         lastSendTime = now;
                     }
                 }
