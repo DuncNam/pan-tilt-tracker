@@ -42,7 +42,7 @@ const int US_MAX = 2000;   // pulse width at 180 degrees
 
 // Boresigh adjustment
 const int BORESIGHT_X = 55;   // laser-to-camera offset, horizontal (pixels)
-const int BORESIGHT_Y = 80;   // laser-to-camera offset, vertical (pixels)
+const int BORESIGHT_Y = 50;   // laser-to-camera offset, vertical (pixels)
 
 // Open and configure serial port to Arduino
 int openSerial(const char* port) {
