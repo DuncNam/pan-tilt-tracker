@@ -30,10 +30,10 @@ const int MIN_SEND_INTERVAL_MS = 10;    // minimum ms between serial commands
 // Implausible position rejection
 int lastCx = -1;                // last valid centroid X
 int lastCy = -1;                // last valid centroid Y
-const int MAX_JUMP = 150;       // reject centroid jumps larger than this many pixels
+const int MAX_JUMP = 300;       // reject centroid jumps larger than this many pixels
 
 // Gain - adjustment rate (degrees/pixel)
-const float KP = 0.0f;          // Proportional
+const float KP = 0.005f;          // Proportional
 const float KI = 0.01f;         // Integral
 
 // Deadband — jitter threshold (pixels)
