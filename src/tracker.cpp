@@ -27,7 +27,7 @@ int lastCy = -1;                 // last valid centroid Y
 const int MAX_JUMP = 150;        // reject centroid jumps larger than this many pixels
 
 // Gain - adjustment rate (degrees/pixel)
-const float GAIN = 0.01f;        // Proportional
+const float GAIN = 0.03f;        // Proportional
 
 // Deadband — jitter threshold (pixels)
 const int DEADBAND = 10;
@@ -41,7 +41,7 @@ const int US_MIN = 500;   // pulse width at 0 degrees
 const int US_MAX = 2500;   // pulse width at 180 degrees
 
 // Boresigh adjustment
-const int BORESIGHT_X = 62;   // laser-to-camera offset, horizontal (pixels)
+const int BORESIGHT_X = 60;   // laser-to-camera offset, horizontal (pixels)
 const int BORESIGHT_Y = 35;   // laser-to-camera offset, vertical (pixels)
 
 // Open and configure serial port to Arduino
