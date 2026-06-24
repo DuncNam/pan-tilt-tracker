@@ -14,20 +14,27 @@ int vLow = 30, vHigh = 255;
 // Servo angles float, int, and previous. Servos begin at 90º
 float panAngleF  = 90.0f;
 float tiltAngleF = 90.0f;
-int lastPanSent  = -1;          // last pan value sent to Arduino
-int lastTiltSent = -1;          // last tilt value sent to Arduino
+
+// Previous error for proportional term
+float lastErrorX = 0.0f;
+float lastErrorY = 0.0f;
+
+// Previous command to prevent redundant sends
+int lastPanSent  = -1;
+int lastTiltSent = -1;
 
 // Serial throttle to avoid overload
 auto lastSendTime = std::chrono::steady_clock::now();
 const int MIN_SEND_INTERVAL_MS = 10;    // minimum ms between serial commands
 
 // Implausible position rejection
-int lastCx = -1;                 // last valid centroid X
-int lastCy = -1;                 // last valid centroid Y
-const int MAX_JUMP = 150;        // reject centroid jumps larger than this many pixels
+int lastCx = -1;                // last valid centroid X
+int lastCy = -1;                // last valid centroid Y
+const int MAX_JUMP = 150;       // reject centroid jumps larger than this many pixels
 
 // Gain - adjustment rate (degrees/pixel)
-const float GAIN = 0.03f;        // Proportional
+const float KP = 0.0f;          // Proportional
+const float KI = 0.01f;         // Integral
 
 // Deadband — jitter threshold (pixels)
 const int DEADBAND = 10;
@@ -194,14 +201,19 @@ int main() {
                     int errorX = cx - ((frameW / 2) + BORESIGHT_X);   // pos (+) -> target right of center
                     int errorY = cy - ((frameH / 2) + BORESIGHT_Y);   // pos (+) -> target below center
 
-                    // Integral corrector
-                    // Only update outside of deadband
+                    // Velocity-form PI control
                     if (abs(errorX) > DEADBAND) {
-                        panAngleF -= errorX * GAIN;
+                        float dErrorX = errorX - lastErrorX;              // change in error since last frame
+                        panAngleF -= (dErrorX * KP) + (errorX * KI);      // P on error-change + I on error
                     }
                     if (abs(errorY) > DEADBAND) {
-                        tiltAngleF += errorY * GAIN;
+                        float dErrorY = errorY - lastErrorY;
+                        tiltAngleF += (dErrorY * KP) + (errorY * KI);
                     }
+
+                    // Store error for next frame's change calculation
+                    lastErrorX = errorX;
+                    lastErrorY = errorY;
 
                     // Clamp angles to safe servo range in degrees
                     panAngleF  = std::max((float)SERVO_MIN, std::min((float)SERVO_MAX, panAngleF));
@@ -229,6 +241,8 @@ int main() {
         if (!targetFound) {
             lastCx = -1;
             lastCy = -1;
+            lastErrorX = 0.0f;    // reset so reacquisition doesn't compute a huge spurious error-change
+            lastErrorY = 0.0f;
         }
 
         // Frame rate update and print
