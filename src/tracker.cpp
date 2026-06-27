@@ -37,7 +37,7 @@ int lastCy = -1;                // last valid centroid Y
 const int MAX_JUMP = 300;       // reject centroid jumps larger than this many pixels
 
 // Gain - adjustment rate (degrees/pixel)
-const float KP = 0.01f;        // Proportional
+const float KP = 0.02f;        // Proportional
 const float KI = 0.01f;         // Integral
 const float KD = 0.0f;          // Derivative
 
