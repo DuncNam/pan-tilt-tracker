@@ -19,6 +19,10 @@ float tiltAngleF = 90.0f;
 float lastErrorX = 0.0f;
 float lastErrorY = 0.0f;
 
+// Error from two frames ago, for the derivative term
+float lastLastErrorX = 0.0f;
+float lastLastErrorY = 0.0f;
+
 // Previous command to prevent redundant sends
 int lastPanSent  = -1;
 int lastTiltSent = -1;
@@ -33,8 +37,9 @@ int lastCy = -1;                // last valid centroid Y
 const int MAX_JUMP = 300;       // reject centroid jumps larger than this many pixels
 
 // Gain - adjustment rate (degrees/pixel)
-const float KP = 0.005f;          // Proportional
+const float KP = 0.005f;        // Proportional
 const float KI = 0.01f;         // Integral
+const float KD = 0.0f;          // Derivative
 
 // Deadband — jitter threshold (pixels)
 const int DEADBAND = 10;
@@ -203,15 +208,19 @@ int main() {
 
                     // Velocity-form PI control
                     if (abs(errorX) > DEADBAND) {
-                        float dErrorX = errorX - lastErrorX;              // change in error since last frame
-                        panAngleF -= (dErrorX * KP) + (errorX * KI);      // P on error-change + I on error
+                        float dErrorX = errorX - lastErrorX;                                // change in error since last frame
+                        float d2ErrorX = errorX - (2.0f * lastErrorX) + lastLastErrorX;     // change of the change in error since last frame
+                        panAngleF -= (dErrorX * KP) + (errorX * KI) + (d2ErrorX * KD);      // P on error-change + I on error
                     }
                     if (abs(errorY) > DEADBAND) {
                         float dErrorY = errorY - lastErrorY;
-                        tiltAngleF += (dErrorY * KP) + (errorY * KI);
+                        float d2ErrorY = errorY - (2.0f * lastErrorY) + lastLastErrorY;
+                        tiltAngleF += (dErrorY * KP) + (errorY * KI) + (d2ErrorY * KD);
                     }
 
                     // Store error for next frame's change calculation
+                    lastLastErrorX = lastErrorX;
+                    lastLastErrorY = lastErrorY;
                     lastErrorX = errorX;
                     lastErrorY = errorY;
 
@@ -243,6 +252,8 @@ int main() {
             lastCy = -1;
             lastErrorX = 0.0f;    // reset so reacquisition doesn't compute a huge spurious error-change
             lastErrorY = 0.0f;
+            lastLastErrorX = 0.0f;
+            lastLastErrorY = 0.0f;
         }
 
         // Frame rate update and print
