@@ -261,7 +261,7 @@ int main() {
         auto fpsNow = std::chrono::steady_clock::now();
         auto fpsElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(fpsNow - fpsClock).count();
         if (fpsElapsed >= 1000) {
-            std::cout << "FPS: " << frameCount << "  Sends/s: " << sendCount << std::endl;
+            std::cout << "FPS: " << frameCount << "  Sends/s: " << sendCount << "  Area: " << area << std::endl;
             frameCount = 0;
             sendCount = 0;
             fpsClock = fpsNow;
