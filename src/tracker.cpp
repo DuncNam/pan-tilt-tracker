@@ -175,8 +175,8 @@ int main() {
                 }
             }
 
-            // Threshold for minimum trackable blob size is 500 pixels
-            if (area > 500) {
+            // Threshold for minimum trackable blob size is 300 pixels
+            if (area > 300) {
                 // Compute centroid
                 cv::Moments m = cv::moments(contours[largest]);     // Compute moments
 
