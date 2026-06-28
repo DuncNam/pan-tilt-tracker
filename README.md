@@ -14,10 +14,10 @@ https://github.com/user-attachments/assets/17dbf7b1-6f33-4910-b293-fe7df4df6ada
 The laser tracks the target smoothly through motion and settles on a stopped 
 target. The depth of field in the demo is difficult to perceive and creates 
 the illusion that the laser is tracking several inches above the target. This 
-is an illusion due to the laser's origin below the target. In this demo, the 
-target is at a distance of approximately 6 feet and the wall is at 
-approximately 8 feet. See [Known Limits](#known-limits) for the characterized 
-speed and accuracy bounds.
+is due to the laser's origin below the target. In this demo, the target is at 
+a distance of approximately 6 feet and the wall is at approximately 8 feet. 
+See [Known Limits](#known-limits) for the characterized speed and accuracy 
+bounds.
 
 ## How It Works
 
