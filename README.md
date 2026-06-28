@@ -56,10 +56,6 @@ tuning rationale are in [`calibration/tuning.md`](calibration/tuning.md).
 | Servos | 2× MG996R high-torque metal gear |
 | Laser | KY-008 650 nm 5 mW |
 
-| | |
-|---|---|
-| ![Wired assembly](media/assembly_photos/wired_assembly.jpeg) | ![Servo wiring](media/assembly_photos/servos.jpeg) |
-
 ## Software Dependencies
 
 - OpenCV 4.x (C++ API)
