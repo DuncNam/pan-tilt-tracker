@@ -162,7 +162,7 @@ int main() {
 
         // Ensure there is a blob in  mask
         bool targetFound = false;
-        double area = 0.0f
+        double area = 0.0f;
         if (!contours.empty()) {
             // Find largest blob in contours
             int largest = 0;
