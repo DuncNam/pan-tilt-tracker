@@ -162,11 +162,11 @@ int main() {
 
         // Ensure there is a blob in  mask
         bool targetFound = false;
+        double area = 0.0f
         if (!contours.empty()) {
-
             // Find largest blob in contours
             int largest = 0;
-            double area = cv::contourArea(contours[largest]);
+            area = cv::contourArea(contours[largest]);
             for (int i = 1; i < (int)contours.size(); i++) {
                 double a = cv::contourArea(contours[i]);
                 if (a > area) {
