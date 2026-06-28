@@ -9,9 +9,9 @@ const int PAN_PIN  = 9;
 const int TILT_PIN = 10;
 const int LASER_PIN = 8;
 
-// Servo center positions in degrees
-int panAngle  = 90;
-int tiltAngle = 90;
+// Servo center positions in microseconds
+int panMicros  = 1500;
+int tiltMicros = 1500;
 
 void setup() {
     // Attach servos to their pins
@@ -23,11 +23,11 @@ void setup() {
     digitalWrite(LASER_PIN, HIGH); // Turn laser on
 
     // Move servos to center position on startup
-    panServo.write(panAngle);
-    tiltServo.write(tiltAngle);
+    panServo.writeMicroseconds(panMicros);
+    tiltServo.writeMicroseconds(tiltMicros);
 
-    // Start serial communication at 9600 baud (bit/s)
-    Serial.begin(9600);
+    // Start serial communication at 115200 baud (bit/s)
+    Serial.begin(115200);
 }
 
 void loop() {
@@ -54,13 +54,13 @@ void loop() {
             int newPan  = latest.substring(0, commaIndex).toInt();
             int newTilt = latest.substring(commaIndex + 1).toInt();
 
-            // Constrain angles to safe servo range
-            panAngle  = constrain(newPan,  0, 180);
-            tiltAngle = constrain(newTilt, 0, 180);
+            // Constrain angles to safe PW range
+            panMicros  = constrain(newPan,  500, 2500);
+            tiltMicros = constrain(newTilt, 500, 2500);
 
             // Command servos
-            panServo.write(panAngle);
-            tiltServo.write(tiltAngle);
+            panServo.writeMicroseconds(panMicros);
+            tiltServo.writeMicroseconds(tiltMicros);
         }
         // Reset for the next command
         latest = "";
