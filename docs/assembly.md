@@ -1,58 +1,63 @@
 # Assembly Guide
 ## Pan-Tilt Laser Tracking System
 
-### Current Status
-Software stack complete as of 2026-05-10. Hardware integration pending parts arrival.
-
-### Completed
-- OpenCV C++ vision pipeline — color detection, centroid tracking, error calculation
-- Arduino servo control sketch — serial command parsing, PWM output, safety constraints
-- RPi serial integration — serial port configuration, proportional control loop
-- RPi OS configured, OpenCV installed, code compiled and verified
-- Arduino verified via Serial Monitor — confirmed parsing pan/tilt commands correctly
-
-### Pending
-- MG996R servos and aluminum bracket arrival (ordered 2026-05-09)
-- Physical servo wiring and power supply test
-- Camera and laser co-mounting on bracket
-- Boresight calibration
-- PID gain tuning
+As-built wiring and assembly reference for the tracker.
 
 ### Parts List
-| Component | Part | Status |
-|---|---|---|
-| Compute | Raspberry Pi 5 2GB | ✅ In hand |
-| Power | Argon GaN 27W USB-C PSU | ✅ In hand |
-| Microcontroller | Arduino Uno R3 | ✅ In hand |
-| Camera | Logitech Brio 101 | ✅ In hand |
-| Servos | 2x MG996R Metal Gear | 🚚 Ordered |
-| Bracket | Aluminum pan-tilt MG996R kit | 🚚 Ordered |
-| Laser | KY-008 650nm 5mW | ✅ In hand |
-| SD Card | SanDisk 32GB A1 | ✅ In hand |
-| Power Supply | 5V 5A DC adapter | 🚚 Ordered |
-| Barrel Jack | 2.1mm breadboard adapter | 🚚 Ordered |
-| Wires | ELEGOO Dupont jumper set | ✅ In hand |
-| Breadboard | ELEGOO 400-point | ✅ In hand |
-| USB Cable | UGREEN USB-A to USB-B | ✅ In hand |
 
-### Wiring Notes
-- MG996R servo power from dedicated 5V 5A supply — NOT from Arduino
-- Servo signal wires: pan → Arduino D9, tilt → Arduino D10
-- All grounds share common connection — servo PSU GND, Arduino GND, RPi GND
-- Arduino powered via USB-B from RPi
-- KY-008 laser: VCC → Arduino 5V, GND → Arduino GND, Signal → Arduino D8
-- RPi to Arduino serial: USB-A to USB-B cable
+| Component | Part |
+|---|---|
+| Compute | Raspberry Pi 5 (2 GB) |
+| Power (Pi) | GaN 27W USB-C PSU |
+| Microcontroller | Arduino Uno R3 |
+| Camera | Logitech Brio 101 |
+| Servos | 2× MG996R metal gear |
+| Bracket | Aluminum pan-tilt MG996R kit |
+| Laser | KY-008 650 nm 5 mW |
+| SD Card | SanDisk 32 GB A1 |
+| Servo power | 5V 5A DC adapter |
+| Barrel jack | 2.1 mm breadboard adapter |
+| Wires | Dupont jumper set |
+| Breadboard | 400-point |
+| USB cable | USB-A to USB-B (Pi → Arduino) |
+
+### Wiring
+
+- **Servo power comes from the dedicated 5V 5A supply, not the Arduino.** The
+  Arduino cannot source enough current for two MG996R servos under load.
+- Servo signal wires: pan → Arduino D9, tilt → Arduino D10.
+- **Common ground across all domains** — servo PSU ground, Arduino ground, and
+  Pi ground are tied together. Without a shared ground the servo signal is
+  referenced to the wrong rail.
+- KY-008 laser: VCC → Arduino 5V, GND → Arduino GND, signal → Arduino D8.
+- Pi ↔ Arduino: USB-A to USB-B cable. This carries both the serial link and
+  Arduino logic power.
+
+### Mounting
+
+- The camera and laser are co-mounted on the pan-tilt platform and move as a
+  single rigid unit, so the laser's aim tracks with the camera's view.
+- The laser sits offset from the camera; this fixed offset is corrected in
+  software with a boresight bias (see `calibration/tuning.md`).
 
 ### Design Notes
-- Camera must be co-mounted on pan-tilt assembly with laser — not fixed
-- Boresight calibration required after assembly to align laser with frame center
-- MG996R selected over MG90S after torque analysis — camera load ~200g requires >0.8kg/cm, MG90S operates at 40% stall torque under this load
-- Servo angles constrained to 10-170° for safety margin
 
-### Post-Assembly Steps
-1. Wire servos and verify physical movement over serial
-2. Mount servos to bracket
-3. Mount Brio 101 and KY-008 to bracket platform
-4. Run boresight calibration
-5. Tune GAIN constant in tracker.cpp — start at 0.05, adjust based on response
-6. Add I and D terms to upgrade from P to full PID controller
+- **MG996R selected over MG90S.** The camera + laser co-mount load (~200 g) needs
+  more torque than the 9 g MG90S can provide without running near stall. The
+  MG996R (≈9 kg·cm at 4.8V) carries the load with margin.
+- Servo travel is constrained to 10–170° in firmware as a safety margin against
+  driving into the mechanical stops.
+- Sub-degree pointing is achieved by commanding servo pulse width
+  (`writeMicroseconds()`, 500–2500 µs) rather than integer degrees.
+
+### Bring-Up Sequence
+
+1. Flash the Arduino sketch and confirm it parses pan/tilt commands over the
+   Serial Monitor.
+2. Power the servos from the dedicated supply and verify physical movement from
+   serial commands before mounting.
+3. Mount the servos to the bracket, then co-mount the camera and laser on the
+   platform.
+4. Run boresight calibration at the intended demo distance.
+5. Build and run the tracker on the Pi; confirm 30 fps capture and tracking.
+6. Tune PID gains (see `calibration/tuning.md` for the method and final values).
