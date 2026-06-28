@@ -37,7 +37,7 @@ int lastCy = -1;                // last valid centroid Y
 const int MAX_JUMP = 300;       // reject centroid jumps larger than this many pixels
 
 // Gain - adjustment rate (degrees/pixel)
-const float KP = 0.02f;        // Proportional
+const float KP = 0.04f;        // Proportional
 const float KI = 0.01f;         // Integral
 const float KD = 0.0f;          // Derivative
 
@@ -210,7 +210,7 @@ int main() {
                     if (abs(errorX) > DEADBAND) {
                         float dErrorX = errorX - lastErrorX;                                // change in error since last frame
                         float d2ErrorX = errorX - (2.0f * lastErrorX) + lastLastErrorX;     // change of the change in error since last frame
-                        panAngleF -= (dErrorX * KP) + (errorX * KI) + (d2ErrorX * KD);      // P on error-change + I on error
+                        panAngleF -= (dErrorX * KP) + (errorX * KI) + (d2ErrorX * KD);      // P on error' + I on error + D on error''
                     }
                     if (abs(errorY) > DEADBAND) {
                         float dErrorY = errorY - lastErrorY;
