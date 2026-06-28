@@ -39,7 +39,7 @@ const int MAX_JUMP = 300;       // reject centroid jumps larger than this many p
 // Gain - adjustment rate (degrees/pixel)
 const float KP = 0.04f;        // Proportional
 const float KI = 0.01f;         // Integral
-const float KD = 0.0f;          // Derivative
+const float KD = 0.008f;          // Derivative
 
 // Deadband — jitter threshold (pixels)
 const int DEADBAND = 10;
