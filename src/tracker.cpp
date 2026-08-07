@@ -39,7 +39,7 @@ const int MAX_JUMP = 500;       // reject centroid jumps larger than this many p
 // Gain - adjustment rate (degrees/pixel)
 const float KP = 0.04f;        // Proportional
 const float KI = 0.012f;         // Integral
-const float KD = 0.012f;          // Derivative
+const float KD = 0.015f;          // Derivative
 
 // Deadband — jitter threshold (pixels)
 const int DEADBAND = 20;
@@ -48,7 +48,7 @@ const int DEADBAND = 20;
 const int SERVO_MIN = 10;
 const int SERVO_MAX = 170;
 
-// Servo safety PW limits for command resolution finer than integer angles
+// Servo safety PW limits for finest command resolution. MG996R servos still have 5us deadband
 const int US_MIN = 500;   // pulse width at 0 degrees
 const int US_MAX = 2500;   // pulse width at 180 degrees
 
@@ -206,7 +206,7 @@ int main() {
                     int errorX = cx - ((frameW / 2) + BORESIGHT_X);   // pos (+) -> target right of center
                     int errorY = cy - ((frameH / 2) + BORESIGHT_Y);   // pos (+) -> target below center
 
-                    // Velocity-form PI control
+                    // Velocity-form PID control
                     if (abs(errorX) > DEADBAND) {
                         float dErrorX = errorX - lastErrorX;                                // change in error since last frame
                         float d2ErrorX = errorX - (2.0f * lastErrorX) + lastLastErrorX;     // change of the change in error since last frame
@@ -228,7 +228,7 @@ int main() {
                     panAngleF  = std::max((float)SERVO_MIN, std::min((float)SERVO_MAX, panAngleF));
                     tiltAngleF = std::max((float)SERVO_MIN, std::min((float)SERVO_MAX, tiltAngleF));
 
-                    // Convert fractional degrees to microseconds for sub-degree resolution
+                    // Convert fractional degrees to microseconds for finer command
                     int panMicros  = angleToMicros(panAngleF);
                     int tiltMicros = angleToMicros(tiltAngleF);
 

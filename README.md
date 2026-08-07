@@ -16,8 +16,6 @@ target. The depth of field in the demo is difficult to perceive and creates
 the illusion that the laser is tracking several inches above the target. This 
 is due to the laser's origin below the target. In this demo, the target is at 
 a distance of approximately 6 feet and the wall is at approximately 8 feet. 
-See [Known Limits](#known-limits) for the characterized speed and accuracy 
-bounds.
 
 ## How It Works
 
@@ -30,8 +28,7 @@ The Pi runs a C++ OpenCV program (`src/tracker.cpp`) that:
 5. Converts angles to servo pulse widths and sends them over serial.
 
 The Arduino (`src/servo_control/servo_control.ino`) parses the pulse-width
-commands and drives the two servos with `writeMicroseconds()` for sub-degree
-resolution.
+commands and drives the two servos with `writeMicroseconds()`
 
 ## Control Approach
 

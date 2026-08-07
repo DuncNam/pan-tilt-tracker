@@ -47,8 +47,9 @@ As-built wiring and assembly reference for the tracker.
   MG996R (≈9 kg·cm at 4.8V) carries the load with margin.
 - Servo travel is constrained to 10–170° in firmware as a safety margin against
   driving into the mechanical stops.
-- Sub-degree pointing is achieved by commanding servo pulse width
-  (`writeMicroseconds()`, 500–2500 µs) rather than integer degrees.
+- Servo commands are issued as pulse widths (writeMicroseconds()) rather than 
+  integer degrees, giving finer command granularity than Servo.write(). The MG996R 
+  has a 5 µs deadband and a 1000 to 2000 µs boundary.
 
 ### Bring-Up Sequence
 

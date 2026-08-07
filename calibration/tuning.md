@@ -39,7 +39,7 @@ OpenCV HSV ranges: H is 0–179, S and V are 0–255.
 |---|---|---|
 | Min blob area | 300 px | Smallest contour accepted as a valid target |
 | MAX_JUMP | 500 px | Largest frame-to-frame centroid move accepted |
-| DEADBAND | 10 px | Error band inside which no correction is applied |
+| DEADBAND | 20 px | Error band inside which no correction is applied |
 | Boresight X / Y | 60 / 35 px | Fixed laser-to-camera offset applied to the setpoint |
 
 **Min blob area — 300 px.** Started at 500. Debugging showed the target was in the 
@@ -55,7 +55,7 @@ legitimate centroid moves that the 300 gate was rejecting. Raising to 500 tolera
 fast motion at the cost of weaker protection against false detections. This risk is 
 accepted because the demoruns a single green target against a clean background.
 
-**DEADBAND — 10 px.** Inside ±10 px of the setpoint, no correction is sent. This
+**DEADBAND — 20 px.** Inside ±10 px of the setpoint, no correction is sent. This
 suppresses servo jitter from the integer-pixel quantization and frame-to-frame
 noise of the centroid when the target is essentially centered. Wide enough to stop
 hunting on a still target, narrow enough not to leave a visible aiming gap.
