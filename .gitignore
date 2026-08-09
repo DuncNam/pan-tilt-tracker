@@ -1,7 +1,18 @@
-tracker
 test
 *.o
-.DS_Store
 .vscode/
 .ipynb_checkpoints/
 .DS_Store
+
+# Compiled binaries
+tracker
+measure_step
+sweep_servo
+capture_frame
+
+# Logged run data - regenerable, keep out of history
+*.csv
+!calibration/data/*.csv
+
+# Calibration images
+*.png

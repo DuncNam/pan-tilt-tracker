@@ -49,8 +49,8 @@ const int SERVO_MIN = 10;
 const int SERVO_MAX = 170;
 
 // Servo safety PW limits for finest command resolution. MG996R servos still have 5us deadband
-const int US_MIN = 500;   // pulse width at 0 degrees
-const int US_MAX = 2500;   // pulse width at 180 degrees
+const int US_MIN = 500;   
+const int US_MAX = 2354;   // measured: 0.0971 deg/us over 1250-1750
 
 // Boresigh adjustment
 const int BORESIGHT_X = 60;   // laser-to-camera offset, horizontal (pixels)
@@ -151,10 +151,22 @@ int main() {
     int sendCount = 0;
     auto fpsClock = std::chrono::steady_clock::now();
 
+    // Time per frame counter
+    auto lastFrameTime = std::chrono::steady_clock::now();
+    double dtSum = 0, dtMax = 0;
+    int dtCount = 0;
+
     // Initialize program loop
     while (true) {
         cap >> frame;                                               // Send current frame to frame matrix
         if (frame.empty()) break;                                   // Verify camera feed
+
+        // Time per frame check
+        auto frameNow = std::chrono::steady_clock::now();
+        double dt = std::chrono::duration<double, std::milli>(frameNow - lastFrameTime).count();
+        lastFrameTime = frameNow;
+        dtSum += dt; dtCount++;
+        if (dt > dtMax) dtMax = dt;
 
         cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);                // Convert BGR to HSV
 
@@ -277,7 +289,9 @@ int main() {
         auto fpsNow = std::chrono::steady_clock::now();
         auto fpsElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(fpsNow - fpsClock).count();
         if (fpsElapsed >= 1000) {
-            std::cout << "FPS: " << frameCount << "  Sends/s: " << sendCount << "  Area: " << area << std::endl;
+            std::cout << "FPS: " << frameCount << "  Sends/s: " << sendCount << "  Area: " << area
+            << "  dt: " << (dtCount ? dtSum/dtCount : 0) << "ms" << "  max: " << dtMax << "ms" << std::endl;
+            dtSum = 0; dtCount = 0; dtMax = 0;
             frameCount = 0;
             sendCount = 0;
             fpsClock = fpsNow;
