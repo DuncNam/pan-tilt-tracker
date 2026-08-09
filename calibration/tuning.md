@@ -75,3 +75,9 @@ physical symptom before the next change, and each PID term was gate-tested at ze
 (confirmed to be a no-op) before a nonzero value was introduced. Tuned PID gains
 (`KP = 0.04`, `KI = 0.012`, `KD = 0.015`) and the velocity-form derivation are
 documented in the main [README](../README.md#control-approach).
+
+## Debuggers Notes
+
+- 2026-08-08: Laser dot punches a hole in the target's HSV mask. Laser off: Area 1071-1110 (±1.8%). Laser on: 730-887 (±10%), mean 38% lower. Unmodeled actuator→sensor feedback path.
+- 2026-08-08: KI=0.024 diverges immediately. Stability margin <2x at KI=0.012. Lag must be closed with feedforward, not gain.
+- 2026-08-08: σ estimate from the DEADBAND=4 run is contaminated by the above. Re-measure with laser off before sizing the Kalman R.

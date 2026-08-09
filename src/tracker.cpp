@@ -42,7 +42,7 @@ const float KI = 0.012f;         // Integral
 const float KD = 0.015f;          // Derivative
 
 // Deadband — jitter threshold (pixels)
-const int DEADBAND = 20;
+const int DEADBAND = 15;
 
 // Servo safety angle limits
 const int SERVO_MIN = 10;
@@ -54,7 +54,7 @@ const int US_MAX = 2500;   // pulse width at 180 degrees
 
 // Boresigh adjustment
 const int BORESIGHT_X = 60;   // laser-to-camera offset, horizontal (pixels)
-const int BORESIGHT_Y = 35;   // laser-to-camera offset, vertical (pixels)
+const int BORESIGHT_Y = 50;   // laser-to-camera offset, vertical (pixels)
 
 // Open and configure serial port to Arduino
 int openSerial(const char* port) {
@@ -127,6 +127,17 @@ int main() {
     // Set camera resolution
     cap.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
+
+    // Lock camera exposure. Auto-exposure drifts with scene brightness, which
+    // shifts HSV values under fixed thresholds and varies motion blur.
+    // Measured 2026-08-08: auto mode selected 33 ms exposure (a full frame
+    // period). Locking to 10 ms cut motion-blur area variance from 4.9x to 1.8x.
+    // These are V4L2 device settings and reset when the camera re-enumerates,
+    // so they must be reapplied every run.
+    system("v4l2-ctl -d /dev/video0 --set-ctrl=exposure_dynamic_framerate=0");
+    system("v4l2-ctl -d /dev/video0 --set-ctrl=auto_exposure=1");        // 1 = Manual
+    system("v4l2-ctl -d /dev/video0 --set-ctrl=exposure_time_absolute=100");  // 10 ms
+    system("v4l2-ctl -d /dev/video0 --set-ctrl=gain=147");
 
     // Verify resolution
     std::cout << "Capture: " << cap.get(cv::CAP_PROP_FRAME_WIDTH)
