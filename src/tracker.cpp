@@ -162,10 +162,15 @@ int main() {
         cv::Scalar lowerBound(hLow, sLow, vLow);
         cv::Scalar upperBound(hHigh, sHigh, vHigh);
 
-        // Create and clean mask
+        // Create mask
         cv::inRange(hsv, lowerBound, upperBound, mask);
+
         cv::erode(mask, mask, cv::Mat(), cv::Point(-1,-1), 1);      // Erode to remove noise
         cv::dilate(mask, mask, cv::Mat(), cv::Point(-1,-1), 1);     // Dilate to restore blob sizes
+        
+        // Fill the hole punched by the laser dot. 
+        // Measured 2026-08-08: laser centered collapsed blob area from ~880 to ~150 px
+        cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(15, 15)));
 
         // Create array contours and store blob outlines
         std::vector<std::vector<cv::Point>> contours;
